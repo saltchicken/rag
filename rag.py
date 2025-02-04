@@ -6,11 +6,14 @@ from sentence_transformers import SentenceTransformer
 Base = declarative_base()
 
 class Embedding(Base):
-    __tablename__ = "rag"
+    __tablename__ = "code_rag"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, nullable=False)
-    vector = Column(Vector(384))
+    function_name = Column(String, nullable=False)
+    docstring = Column(String, nullable=True)
+    docstring_embedding = Column(Vector(384), nullable=True)
+    code_snippet = Column(String, nullable=False)
+    code_snippet_embedding = Column(Vector(384), nullable=False)
 
 class Rag():
     def __init__(self):
@@ -25,20 +28,49 @@ class Rag():
     def create_table(self):
         Base.metadata.create_all(self.engine)
 
-    def write_embedding(self, text):
-        embedding = self.model.encode(text)
-        new_embedding = Embedding(name=text, vector=embedding.tolist())
-        self.session.add(new_embedding)
+    def write_embedding(self, function_name, docstring, code_snippet):
+        function_name_embedding = self.model.encode(function_name)
+        if docstring:
+            docstring_embedding = self.model.encode(docstring).tolist()
+        else:
+            docstring_embedding = None
+        code_snippet_embedding = self.model.encode(code_snippet).tolist()
+
+        code_entry = Embedding(function_name=function_name,
+                               docstring=docstring,
+                               docstring_embedding=docstring_embedding,
+                               code_snippet=code_snippet,
+                               code_snippet_embedding=code_snippet_embedding)
+        self.session.add(code_entry)
         self.session.commit()
 
+    def search_docstring_embedding(self, query):
+        query_embedding = self.model.encode(query)
+        query_vector = query_embedding.tolist()
 
-    def test_search(self, text):
-        embedding = self.model.encode(text)
-
-        query_vector = embedding.tolist()
-        stmt = select(Embedding).order_by(Embedding.vector.l2_distance(query_vector)).limit(5)
+        stmt = select(Embedding).order_by(Embedding.docstring_embedding.l2_distance(query_vector)).limit(5)
         results = self.session.execute(stmt).scalars().all()
 
         for res in results:
-            print(res.id, res.name)
+            print(res.function_name)
+
+    def search_code_snippet_embedding(self, query):
+        query_embedding = self.model.encode(query)
+        query_vector = query_embedding.tolist()
+
+        stmt = select(Embedding).order_by(Embedding.code_snippet_embedding.l2_distance(query_vector)).limit(5)
+        results = self.session.execute(stmt).scalars().all()
+
+        for res in results:
+            print(res.function_name)
+
+    # def test_search(self, text):
+    #     embedding = self.model.encode(text)
+    #
+    #     query_vector = embedding.tolist()
+    #     stmt = select(Embedding).order_by(Embedding.vector.l2_distance(query_vector)).limit(5)
+    #     results = self.session.execute(stmt).scalars().all()
+    #
+    #     for res in results:
+    #         print(res.id, res.name)
 
