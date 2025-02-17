@@ -6,7 +6,7 @@ from sentence_transformers import SentenceTransformer
 Base = declarative_base()
 
 class Embedding(Base):
-    __tablename__ = "code_rag"
+    __tablename__ = "facer_rag"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     function_name = Column(String, nullable=False)
@@ -48,21 +48,21 @@ class Rag():
         query_embedding = self.model.encode(query)
         query_vector = query_embedding.tolist()
 
-        stmt = select(Embedding).order_by(Embedding.docstring_embedding.l2_distance(query_vector)).limit(5)
+        stmt = select(Embedding).order_by(Embedding.docstring_embedding.l2_distance(query_vector)).limit(2)
         results = self.session.execute(stmt).scalars().all()
 
         for res in results:
-            print(res.function_name)
+            print(res.function_name, res.code_snippet)
 
     def search_code_snippet_embedding(self, query):
         query_embedding = self.model.encode(query)
         query_vector = query_embedding.tolist()
 
-        stmt = select(Embedding).order_by(Embedding.code_snippet_embedding.l2_distance(query_vector)).limit(5)
+        stmt = select(Embedding).order_by(Embedding.code_snippet_embedding.l2_distance(query_vector)).limit(2)
         results = self.session.execute(stmt).scalars().all()
 
         for res in results:
-            print(res.function_name)
+            print(res.function_name, res.code_snippet)
 
     # def test_search(self, text):
     #     embedding = self.model.encode(text)

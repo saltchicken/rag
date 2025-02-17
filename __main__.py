@@ -3,7 +3,7 @@ from code_context import CodeContext
 
 
 if __name__ == "__main__":
-    context = CodeContext("../code_context", ".py")
+    context = CodeContext("../facer", ".py")
     rag = Rag()
 
     # for function in context.functions:
@@ -11,7 +11,7 @@ if __name__ == "__main__":
     # rag.create_table()
     # rag.write_embedding("This is a sentence about people")
     # rag.test_search("I am interested in George Washington")
-    rag.search_docstring_embedding('What function can I use to discard directories that I have specified as not needed')
-    rag.search_code_snippet_embedding('What function can I use to discard directories that I have specified as not needed')
+    rag.search_docstring_embedding('Insert an embedding into the database')
+    rag.search_code_snippet_embedding('Insert an embedding into the database')
 
 
